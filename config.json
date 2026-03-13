@@ -1,0 +1,65 @@
+{
+  "url": "https://exemple.com/inscription",
+
+  "settings": {
+    "headless": false,
+    "wait_timeout": 10,
+    "delay_between_fields": 0.3,
+    "submit": false,
+    "keep_open": false
+  },
+
+  "form_data": {
+    "prenom":          "Jean",
+    "nom":             "Dupont",
+    "email":           "jean.dupont@email.com",
+    "telephone":       "+33612345678",
+    "mot_de_passe":    "MonMotDePasse123!",
+    "confirmation_mdp":"MonMotDePasse123!",
+    "date_naissance":  "01/01/1990",
+    "pays":            "France",
+    "accepter_cgu":    true
+  },
+
+  "fields": {
+    "inputs": {
+      "prenom": {
+        "selector": { "by": "id", "value": "firstname" }
+      },
+      "nom": {
+        "selector": { "by": "id", "value": "lastname" }
+      },
+      "email": {
+        "selector": { "by": "id", "value": "email" }
+      },
+      "telephone": {
+        "selector": { "by": "name", "value": "phone" }
+      },
+      "mot_de_passe": {
+        "selector": { "by": "id", "value": "password" }
+      },
+      "confirmation_mdp": {
+        "selector": { "by": "id", "value": "password_confirm" }
+      },
+      "date_naissance": {
+        "selector": { "by": "css", "value": "input[name='birthdate']" }
+      }
+    },
+
+    "selects": {
+      "pays": {
+        "selector": { "by": "id", "value": "country" }
+      }
+    },
+
+    "checkboxes": {
+      "accepter_cgu": {
+        "selector": { "by": "id", "value": "terms" }
+      }
+    },
+
+    "submit_button": {
+      "selector": { "by": "css", "value": "button[type='submit']" }
+    }
+  }
+}
