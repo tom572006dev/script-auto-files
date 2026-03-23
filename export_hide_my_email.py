@@ -17,8 +17,6 @@ import time
 import sys
 from datetime import datetime
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.safari.options import Options as SafariOptions
 
 
@@ -73,39 +71,37 @@ def scroll_to_load_all(driver: webdriver.Safari) -> None:
 
 
 def extract_emails_from_page(driver: webdriver.Safari) -> list:
-    results = []
-    seen = set()
+    """Scan every text node in the DOM via JS to find Hide My Email addresses."""
+    raw = driver.execute_script("""
+        var results = [];
+        var seen = {};
+        var emailRe = /[a-zA-Z0-9._%+\\-]+@(?:privaterelay\\.appleid\\.com|icloud\\.com)/gi;
 
-    email_selectors = [
-        (By.XPATH, "//*[contains(text(), '@privaterelay.appleid.com')]"),
-        (By.XPATH, "//*[contains(text(), '@icloud.com') and string-length(text()) < 80]"),
-        (By.CSS_SELECTOR, "[class*='EmailRow'] [class*='email']"),
-        (By.CSS_SELECTOR, "[class*='hideMyEmail'] [class*='address']"),
-        (By.CSS_SELECTOR, "li[class*='item'] span[class*='email']"),
-    ]
-
-    for by, sel in email_selectors:
-        try:
-            elements = driver.find_elements(by, sel)
-            for el in elements:
-                text = el.text.strip()
-                if "@" in text and text not in seen:
-                    seen.add(text)
-                    label = ""
-                    try:
-                        parent = el.find_element(By.XPATH, "..")
-                        for s in parent.find_elements(By.TAG_NAME, "span"):
-                            t = s.text.strip()
-                            if t and t != text:
-                                label = t
-                                break
-                    except Exception:
-                        pass
-                    results.append({"email": text, "label": label})
-        except Exception:
-            continue
-
-    return results
+        function walk(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                var matches = node.textContent.match(emailRe);
+                if (matches) {
+                    matches.forEach(function(m) {
+                        var email = m.toLowerCase().trim();
+                        if (!seen[email]) {
+                            seen[email] = true;
+                            // grab the closest ancestor's full text as label candidate
+                            var parent = node.parentElement;
+                            var label = parent ? parent.innerText.replace(email, '').replace(/\\s+/g, ' ').trim() : '';
+                            // keep label short and meaningful
+                            if (label.length > 120) label = '';
+                            results.push({email: email, label: label});
+                        }
+                    });
+                }
+            } else {
+                node.childNodes.forEach(walk);
+            }
+        }
+        walk(document.body);
+        return results;
+    """)
+    return raw if raw else []
 
 
 def save_csv(emails: list, path: str) -> None:
