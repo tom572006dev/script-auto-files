@@ -3,13 +3,14 @@
 Export iCloud "Hide My Email" addresses to CSV.
 
 Usage:
-    python export_hide_my_email.py
+    python3 export_hide_my_email.py
 
-The browser will open. Log in manually (with your Apple ID + 2FA),
-then the script will navigate to Hide My Email and extract all addresses.
+Uses your existing Chrome profile (already logged in to iCloud) so no
+login or passkey is required. Close Chrome completely before running.
 """
 
 import csv
+import os
 import time
 import sys
 from datetime import datetime
@@ -26,15 +27,19 @@ from selenium.webdriver.chrome.options import Options
 ICLOUD_URL = "https://www.icloud.com"
 HIDE_MY_EMAIL_URL = "https://www.icloud.com/settings/"
 
-LOGIN_TIMEOUT = 120   # seconds to wait for manual login
-NAV_TIMEOUT   = 30   # seconds for navigation waits
-SCROLL_PAUSE  = 1.5  # seconds between scrolls to load more items
+NAV_TIMEOUT  = 30   # seconds for navigation waits
+SCROLL_PAUSE = 1.5  # seconds between scrolls to load more items
+
+# Existing Chrome profile on macOS
+CHROME_PROFILE_DIR = os.path.expanduser(
+    "~/Library/Application Support/Google/Chrome"
+)
 
 
-def build_driver(headless: bool = False) -> webdriver.Chrome:
+def build_driver() -> webdriver.Chrome:
     options = Options()
-    if headless:
-        options.add_argument("--headless=new")
+    options.add_argument(f"--user-data-dir={CHROME_PROFILE_DIR}")
+    options.add_argument("--profile-directory=Default")
     options.add_argument("--window-size=1400,900")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -47,12 +52,16 @@ def build_driver(headless: bool = False) -> webdriver.Chrome:
     return driver
 
 
-def wait_for_login(driver: webdriver.Chrome) -> None:
-    """Wait until the user confirms they have completed login."""
-    print("\n[1/4] Browser opened on iCloud.")
-    print("      --> Connecte-toi avec ton Apple ID + code 2FA dans le navigateur.")
-    input("      --> Appuie sur ENTRÉE ici une fois que tu es bien connecté : ")
-    print("[1/4] Login confirmé.")
+def check_logged_in(driver: webdriver.Chrome) -> None:
+    """Verify the existing session is active, otherwise ask user to log in manually."""
+    print("\n[1/4] Vérification de la session iCloud...")
+    time.sleep(3)
+    if "signin" in driver.current_url.lower() or "appleid" in driver.current_url.lower():
+        print("      Session expirée ou non trouvée.")
+        print("      --> Connecte-toi manuellement dans le navigateur.")
+        input("      --> Appuie sur ENTRÉE une fois connecté : ")
+    else:
+        print("[1/4] Session active détectée.")
 
 
 def navigate_to_hide_my_email(driver: webdriver.Chrome) -> None:
@@ -168,10 +177,13 @@ def save_csv(emails: list[dict], path: str) -> None:
 
 
 def main():
-    driver = build_driver(headless=False)
+    print("IMPORTANT : ferme complètement Chrome avant de continuer.")
+    input("Appuie sur ENTRÉE quand Chrome est fermé : ")
+
+    driver = build_driver()
     try:
         driver.get(ICLOUD_URL)
-        wait_for_login(driver)
+        check_logged_in(driver)
         navigate_to_hide_my_email(driver)
         scroll_to_load_all(driver)
 
