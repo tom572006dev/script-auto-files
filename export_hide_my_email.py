@@ -48,18 +48,11 @@ def build_driver(headless: bool = False) -> webdriver.Chrome:
 
 
 def wait_for_login(driver: webdriver.Chrome) -> None:
-    """Wait until the user has completed login (2FA included)."""
-    print(f"\n[1/4] Browser opened. Please log in to iCloud (Apple ID + 2FA).")
-    print(f"      You have {LOGIN_TIMEOUT} seconds.\n")
-    wait = WebDriverWait(driver, LOGIN_TIMEOUT)
-    # iCloud redirects to /mail or /settings after successful login
-    wait.until(lambda d: (
-        "icloud.com" in d.current_url and
-        d.current_url not in (ICLOUD_URL, ICLOUD_URL + "/", ICLOUD_URL + "/#")
-        and "signin" not in d.current_url.lower()
-        and "appleid" not in d.current_url.lower()
-    ))
-    print("[1/4] Login detected.")
+    """Wait until the user confirms they have completed login."""
+    print("\n[1/4] Browser opened on iCloud.")
+    print("      --> Connecte-toi avec ton Apple ID + code 2FA dans le navigateur.")
+    input("      --> Appuie sur ENTRÉE ici une fois que tu es bien connecté : ")
+    print("[1/4] Login confirmé.")
 
 
 def navigate_to_hide_my_email(driver: webdriver.Chrome) -> None:
