@@ -18,9 +18,7 @@ import sys
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.safari.options import Options as SafariOptions
 
 
@@ -50,34 +48,15 @@ def check_logged_in(driver: webdriver.Safari) -> None:
 
 
 def navigate_to_hide_my_email(driver: webdriver.Safari) -> None:
-    print("[2/4] Navigation vers iCloud Settings > Hide My Email...")
+    print("[2/4] Ouverture de iCloud Settings...")
     driver.get(HIDE_MY_EMAIL_URL)
-    time.sleep(4)
-
-    selectors_section = [
-        (By.XPATH, "//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'hide my email')]"),
-        (By.XPATH, "//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'masquer mon adresse')]"),
-        (By.PARTIAL_LINK_TEXT, "Hide My Email"),
-        (By.PARTIAL_LINK_TEXT, "Masquer"),
-    ]
-
-    wait = WebDriverWait(driver, NAV_TIMEOUT)
-    clicked = False
-    for by, value in selectors_section:
-        try:
-            el = wait.until(EC.element_to_be_clickable((by, value)))
-            el.click()
-            clicked = True
-            print("[2/4] Section 'Hide My Email' ouverte.")
-            time.sleep(3)
-            break
-        except TimeoutException:
-            continue
-
-    if not clicked:
-        print("[2/4] Impossible d'ouvrir la section automatiquement.")
-        print("      Ouvre manuellement 'Hide My Email' dans Safari.")
-        input("      Appuie sur ENTRÉE quand la liste est visible : ")
+    print()
+    print("  Dans Safari :")
+    print("  1. Attends que la page se charge complètement")
+    print("  2. Clique sur 'Hide My Email' (ou 'Masquer mon adresse e-mail')")
+    print("  3. Attends que la liste de tes adresses apparaisse")
+    print()
+    input("  Appuie sur ENTRÉE quand la liste est visible : ")
 
 
 def scroll_to_load_all(driver: webdriver.Safari) -> None:
